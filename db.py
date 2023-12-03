@@ -91,7 +91,6 @@ class Filter(ABC):
         except sql.Error as err:
             print(f"Ошибка {err}")
         
-    
     @abstractmethod
     def fetchdata(self):
         pass
