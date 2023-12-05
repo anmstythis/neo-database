@@ -145,10 +145,28 @@ def corpuscreate(title, sp):
     staffcorpdata = empcorp.insertinfo('corpus')
     executequery(staffcorpdata)
 
-def authorize():
-    surname = input("Введите вашу фамилию: ").capitalize()
-    name = input("Введите ваше имя: ").capitalize() 
-    middlename = input("Введите ваше отчество (если есть): ").capitalize()
+def registration():
+    while(True):
+        surname = str(input("Введите вашу фамилию: ")).capitalize()
+        if not surname.isalpha():
+            print("Фамилия должна содержать только буквы!")
+        else:
+            break
+
+    while(True):  
+        name = str(input("Введите ваше имя: ")).capitalize()
+        if not name.isalpha():
+            print("Имя должно содержать только буквы!")
+        else:
+            break
+
+    while(True):
+        middlename = input("Введите ваше отчество (если есть): ").capitalize()
+        if not middlename.isalpha() and middlename == " ":
+            print("Отчество должно содержать только буквы!")
+        else:
+            break
+
     while(True):
         try:
             day = int(input("Введите дату вашего рождения.\nДень: "))
@@ -230,7 +248,6 @@ def authorize():
         corpuscreate(tech, techsp)
 
         corpuscreate(bio, biosp)
-
         corpuscreate(geo, geosp)
 
         corpuscreate(cosmo, cosmosp)
@@ -290,6 +307,69 @@ def authorize():
 
     updatevalue('staff_in_corp', "staff_id", idstaff, idstaff)
 
+def authorize():
+    while(True):
+        while(True):
+            login = str(input("Введите логин (в качестве логина введите вашу фамилию): ")).capitalize()
+            if not login.isalpha():
+                print("Фамилия должна содержать только буквы!")
+            else:
+                break    
+        while(True):
+            password = input("Введите пароль (в качестве пароля введите свой ID): ")
+            if not password.isdigit():
+                print("Пароль должен содержать только цифры!")
+            else:
+                break
+        try:
+            user = searchid('staff', 'surname', login)
+            user = str(user)
+        except:
+            print("Вы ввели несуществующий логин!")
+        if password == user:
+            req = f"surname = '{login}'"
+            userstaff = OneData('staff', column="surname, firstname, middlename, birthday", value=req)
+            usersdata = userstaff.fetchdata()
+            print("\nВаши данные:")
+            print("------------------------------------------------------------------------")
+            print("Ваши ФИО и дата рождения:")
+            for item in usersdata:
+                print(item)
+            idpst = OneData('staff', 'post_id', f'id={password}')
+            pstid = idpst.fetchdata()
+            for item in pstid:
+                itpst = item 
+
+            try:
+                print("\nВаша должность: ")
+                userpost = OneData('staff_post', "post", value=f'id = {itpst}')
+                postuser = userpost.fetchdata()
+                for item in postuser:
+                    print(item)
+                ided = OneData('staff', 'edu_id', f'id={password}')
+                edid = idpst.fetchdata()
+                for item in edid:
+                    itedu = item 
+            except:
+                print("Нет сведений.")
+            finally:
+                try:
+                    print("\nСведения о Вашем образовании: ")
+                    useredu = OneData('education', column='title, speciality, qualification, typeofedu', value=f'id = {itedu}')
+                    eduser = useredu.fetchdata()
+                    for item in eduser:
+                        print(item)
+                    break
+                except:
+                    print("Нет сведений.")
+                finally:
+                    break
+        else:
+            print("Вы ввели неверный пароль!\n")
+        
+            
+    
+
 def tablesoutput():
     while(True):
         tablenum = input()
@@ -328,7 +408,7 @@ def changedata():
     print(f"Значения: {data}")
     while(True):
         idnum = int(input("\nВыберите id (самая первая цифра из кортежей): "))
-        if idnum > data.__len__():
+        if idnum > data.__len__() + 1:
             print("Такого id нет.")
         else:
             break
@@ -412,16 +492,23 @@ def sortdata():
 
 
 whattodo = input("Добро пожаловать на информационную систему Корпорации Нео.\nЧто вы хотите сделать?"\
-                 "\n1. Авторизоваться\n2. Изменить данные\n3. Фильровать данные\n4. Удалить данные\n")
-print("------------------------------------------------------------------------")
+                 "\n1. Авторизоваться или зарегистрироваться\n2. Изменить данные\n3. Фильровать данные\n4. Удалить данные\n")
 match whattodo:
     case "1":  
-        authorize()
+        ent = input("1. Войти в существующую учетную запись. \n2. Создать новую.\n")
+        print("------------------------------------------------------------------------")
+        if ent == '1':
+            authorize()
+        elif ent == '2':
+            registration()
     case "2":
+        print("------------------------------------------------------------------------")
         changedata()
     case "3":
+        print("------------------------------------------------------------------------")
         sortdata()
     case "4":
+        print("------------------------------------------------------------------------")
         print("Из какой таблицы удалить данные?\n1. staff_post\n2. staff\n3. education\n4. corpus\n5. staff_in_corp")
         table = tablesoutput()
         corpstaff = AllData(table)
@@ -429,7 +516,7 @@ match whattodo:
         print(f"Значения: {data}")
         while(True):
             idnum = int(input("\nВведите id (самая первая цифра из кортежей): "))
-            if idnum > data.__len__():
+            if idnum > data.__len__() + 1:
                 print("Такого id нет.")
             else:
                 break
